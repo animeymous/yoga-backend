@@ -1,14 +1,12 @@
-# Use an official lightweight OpenJDK 22 runtime image
+# Use Maven to build the app first
+FROM maven:3.9.6-eclipse-temurin-22 AS build
+WORKDIR /app
+COPY . .
+RUN mvn clean package -DskipTests
+
+# Use lightweight JDK to run the app
 FROM eclipse-temurin:22-jdk-alpine
-
-# Create a volume for temporary files
-VOLUME /tmp
-
-# Copy the jar built by Maven into the container
-COPY target/*.jar app.jar
-
-# Expose port 8080 (Spring Boot default)
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Run the jar file
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
