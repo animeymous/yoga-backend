@@ -1,5 +1,5 @@
 package com.yogaapp.backend.controller;
-
+import java.util.Map;
 import com.yogaapp.backend.dto.EmailRequest;
 import com.yogaapp.backend.service.EmailService;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +18,17 @@ public class EmailController {
     @PostMapping
     public ResponseEntity<?> sendEmail(@RequestBody EmailRequest request) {
         boolean success = emailService.sendEmail(request.getEmail(), request.getMessage());
-        return success ? ResponseEntity.ok("Email sent!") : ResponseEntity.status(500).body("Failed to send email");
+
+        if (success) {
+            return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Email sent!"
+            ));
+        } else {
+            return ResponseEntity.status(500).body(Map.of(
+                    "success", false,
+                    "message", "Failed to send email"
+            ));
+        }
     }
 }
