@@ -20,20 +20,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable) // disable CSRF for simplicity (adjust as needed)
+                .cors(Customizer.withDefaults())      // <-- **Enable CORS in Spring Security**
+                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for simplicity
                 .authorizeHttpRequests(auth -> auth
                         // Testing API rules
-                        .requestMatchers(HttpMethod.GET, "/api/v1/testing").permitAll()         // public GET testing
-                        .requestMatchers(HttpMethod.POST, "/api/v1/testing").hasRole("ADMIN") // admin POST testing
+                        .requestMatchers(HttpMethod.GET, "/api/v1/testing").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/testing").hasRole("ADMIN")
 
                         // Contact API rules
-                        .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()      // public POST contact
-                        .requestMatchers(HttpMethod.GET, "/api/v1/contact").hasRole("ADMIN")  // admin GET contact
+                        .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/contact").hasRole("ADMIN")
 
                         // all other endpoints require authentication
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults()) // basic auth for protected endpoints
+                .httpBasic(Customizer.withDefaults()) // Basic auth for protected endpoints
                 .build();
     }
 
@@ -41,7 +42,7 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         UserDetails admin = User.builder()
                 .username("admin")
-                .password("{noop}admin123") // {noop} disables password encoding
+                .password("{noop}admin123") // {noop} disables password encoding (for demo only)
                 .roles("ADMIN")
                 .build();
 
