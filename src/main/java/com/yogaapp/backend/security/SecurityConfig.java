@@ -31,6 +31,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/contact").hasRole("ADMIN")
 
+                        // Email API rules
+                        .requestMatchers(HttpMethod.POST, "/api/v1/email").hasRole("ADMIN")
+
+
                         // all other endpoints require authentication
                         .anyRequest().authenticated()
                 )
