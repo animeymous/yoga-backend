@@ -1,28 +1,3 @@
-//package com.yogaapp.backend.security;
-
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.config.Customizer;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.web.SecurityFilterChain;
-//
-//@Configuration
-//public class SecurityConfig {
-//
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//        return http
-//                .authorizeHttpRequests(auth -> auth
-//                        .requestMatchers("/api/v1/testing").permitAll()
-//                        .requestMatchers("/api/v1/testing/**").hasRole("ADMIN")
-//                        .anyRequest().authenticated()
-//                )
-//                .csrf(csrf -> csrf.disable()) // ✅ New style: disable CSRF using lambda
-//                .httpBasic(Customizer.withDefaults()) // or .formLogin(Customizer.withDefaults())
-//                .build();
-//    }
-//}
-
 package com.yogaapp.backend.security;
 
 import org.springframework.context.annotation.Bean;
@@ -45,13 +20,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) // disable CSRF for simplicity (adjust as needed)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.GET, "/api/v1/testing").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/testing").hasRole("ADMIN")
+                        // Testing API rules
+                        .requestMatchers(HttpMethod.GET, "/api/v1/testing").permitAll()         // public GET testing
+                        .requestMatchers(HttpMethod.POST, "/api/v1/testing").hasRole("ADMIN") // admin POST testing
+
+                        // Contact API rules
+                        .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()      // public POST contact
+                        .requestMatchers(HttpMethod.GET, "/api/v1/contact").hasRole("ADMIN")  // admin GET contact
+
+                        // all other endpoints require authentication
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(Customizer.withDefaults()) // basic auth for protected endpoints
                 .build();
     }
 
@@ -59,11 +41,10 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         UserDetails admin = User.builder()
                 .username("admin")
-                .password("{noop}admin123") // {noop} disables encoding for testing
+                .password("{noop}admin123") // {noop} disables password encoding
                 .roles("ADMIN")
                 .build();
 
         return new InMemoryUserDetailsManager(admin);
     }
 }
-
