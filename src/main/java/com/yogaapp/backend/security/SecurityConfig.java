@@ -1,55 +1,61 @@
 package com.yogaapp.backend.security;
 
+import com.yogaapp.backend.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import com.yogaapp.backend.security.JwtAuthFilter;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtUtil jwtUtil;
+    private final UserDetailsService userDetailsService; // Add this
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http
-                .cors(Customizer.withDefaults())      // <-- **Enable CORS in Spring Security**
-                .csrf(AbstractHttpConfigurer::disable) // Disable CSRF for simplicity
-                .authorizeHttpRequests(auth -> auth
-                        // Testing API rules
-                        .requestMatchers(HttpMethod.GET, "/api/v1/testing").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/testing").hasRole("ADMIN")
+        JwtAuthFilter jwtAuthFilter = new JwtAuthFilter(jwtUtil, userDetailsService); // Pass both
 
-                        // Contact API rules
+        return http
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/contact").hasRole("ADMIN")
-
-                        // Email API rules
                         .requestMatchers(HttpMethod.POST, "/api/v1/email").hasRole("ADMIN")
-
-
-                        // all other endpoints require authentication
                         .anyRequest().authenticated()
                 )
-                .httpBasic(Customizer.withDefaults()) // Basic auth for protected endpoints
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
     @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails admin = User.builder()
-                .username("admin")
-                .password("{noop}admin123") // {noop} disables password encoding (for demo only)
-                .roles("ADMIN")
-                .build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
-        return new InMemoryUserDetailsManager(admin);
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }
