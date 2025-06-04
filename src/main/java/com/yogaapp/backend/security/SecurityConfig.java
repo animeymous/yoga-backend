@@ -39,6 +39,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/contact").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/contact/email").hasRole("ADMIN")
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session ->
