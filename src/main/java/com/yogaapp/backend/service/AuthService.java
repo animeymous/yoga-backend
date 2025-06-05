@@ -1,7 +1,6 @@
 package com.yogaapp.backend.service;
 
 import com.yogaapp.backend.dto.*;
-import com.yogaapp.backend.entity.Role;
 import com.yogaapp.backend.entity.User;
 import com.yogaapp.backend.repository.UserRepository;
 import com.yogaapp.backend.util.JwtUtil;
@@ -10,6 +9,8 @@ import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     public AuthResponseDto signup(RegisterRequestDto request) {
         var user = User.builder()
@@ -30,20 +32,28 @@ public class AuthService {
         userRepository.save(user);
 
         String token = jwtUtil.generateToken(user);
+
+        logger.info("returning token from auth service signup method  " +token);
         return new AuthResponseDto(token);
     }
 
     public AuthResponseDto login(LoginRequestDto request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+            );
+        } catch (Exception e) {
+            logger.error("Authentication failed: {}", e.getMessage());
+            throw e;
+        }
 
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        System.out.println(user);
 
         String token = jwtUtil.generateToken(user);
+
+        logger.info("returning token from auth service signup method "+token);
         return new AuthResponseDto(token);
     }
 }
