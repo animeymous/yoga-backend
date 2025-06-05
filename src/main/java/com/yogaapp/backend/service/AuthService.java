@@ -5,13 +5,13 @@ import com.yogaapp.backend.entity.User;
 import com.yogaapp.backend.repository.UserRepository;
 import com.yogaapp.backend.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -20,7 +20,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     public AuthResponseDto signup(RegisterRequestDto request) {
         var user = User.builder()
@@ -33,7 +32,7 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user);
 
-        logger.info("returning token from auth service signup method  " +token);
+        log.info("returning token from auth service signup method  " +token);
         return new AuthResponseDto(token);
     }
 
@@ -43,7 +42,7 @@ public class AuthService {
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (Exception e) {
-            logger.error("Authentication failed: {}", e.getMessage());
+            log.error("Authentication failed: {}", e.getMessage());
             throw e;
         }
 
@@ -53,7 +52,7 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user);
 
-        logger.info("returning token from auth service signup method "+token);
+        log.info("returning token from auth service signup method "+token);
         return new AuthResponseDto(token);
     }
 }

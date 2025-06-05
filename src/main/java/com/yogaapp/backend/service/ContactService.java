@@ -4,9 +4,10 @@ import com.yogaapp.backend.dto.ContactDto;
 import com.yogaapp.backend.entity.Contact;
 import com.yogaapp.backend.repository.ContactRepository;
 import org.springframework.stereotype.Service;
-
+import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ContactService {
 
@@ -26,10 +27,12 @@ public class ContactService {
                 .message(dto.getMessage())
                 .build();
 
+        log.info("saved contact");
         return contactRepository.save(contact);
     }
 
     public List<Contact> getAll() {
+        log.info("returning all contacts");
         return contactRepository.findAll();
     }
 }
